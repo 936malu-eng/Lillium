@@ -1,0 +1,204 @@
+backend/
+├── node_modules/
+├── src/
+│   ├── routes/
+│   │   └── redirect.routes.js
+│   ├── services/
+│   │   └── redirect.service.js
+│   └── app.js
+├── package.json
+├── package-lock.json
+└── server.js
+
+
+json {
+  "name": "lillium-backend",
+  "version": "1.0.0",
+  "description": "Backend Express para o projeto Lillium",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2"
+  }
+}
+
+js  services 
+const linksExternos = {
+  insta: 'https://www.instagram.com/lillium_cb',
+  ttk: 'https://www.tiktok.com/@lillium_cb',
+  ytb: 'https://www.youtube.com/@Lillium',
+  email: 'mailto:lillium.cb@gmail.com',
+};
+
+const contagemCliques = {
+  insta: 0,
+  ttk: 0,
+  ytb: 0,
+  email: 0,
+};
+
+function obterUrlERegistrarClique(rede) {
+  const urlDestino = linksExternos[rede];
+
+  if (!urlDestino) {
+    return null;
+  }
+
+  contagemCliques[rede] = (contagemCliques[rede] || 0) + 1;
+  console.log(`[Clique Registrado] ${rede}: ${contagemCliques[rede]}`);
+
+  return urlDestino;
+}
+
+function obterEstatisticas() {
+  return { totalCliques: contagemCliques };
+}
+
+module.exports = {
+  obterUrlERegistrarClique,
+  obterEstatisticas,
+};
+
+
+
+routes 
+const { Router } = require('express');
+const { obterUrlERegistrarClique, obterEstatisticas } = require('../services/redirect.service');
+
+const router = Router();
+
+// Rota de Redirecionamento
+router.get('/redirect/:rede', (req, res) => {
+  const { rede } = req.params;
+  const urlDestino = obterUrlERegistrarClique(rede);
+
+  if (!urlDestino) {
+    return res.status(404).json({ erro: 'Link não encontrado.' });
+  }
+
+  return res.redirect(302, urlDestino);
+});
+
+// Rota de Estatísticas
+router.get('/estatisticas', (req, res) => {
+  const estatisticas = obterEstatisticas();
+  return res.json(estatisticas);
+});
+
+module.exports = router;
+
+app.js
+const express = require('express');
+const cors = require('cors');
+const redirectRoutes = require('./routes/redirect.routes');
+
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+
+app.use('/api', redirectRoutes);
+
+module.exports = app;
+
+
+
+server.js
+
+const app = require('./src/app');
+
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`🚀 Servidor Express rodando em http://localhost:${PORT}`);
+});
+
+
+
+js front
+
+document.addEventListener("DOMContentLoaded", () => {
+    // URL do servidor backend Express que está rodando na porta 3000
+    const BACKEND_URL = "http://localhost:3000";
+
+    // 1. ROLAGEM SUAVE NOS BOTÕES E MENU
+    const escrolar = [
+        { btnId: "sm", targetId: "saiba" },
+        { btnId: "sn", targetId: "sobr" },
+        { btnId: "jog", targetId: "jogar" },
+        { btnId: "mais", targetId: "saiba" },
+        { btnId: "nos", targetId: "sobr" },
+        { btnId: "jogue", targetId: "jogar" }
+    ];
+
+    escrolar.forEach(item => {
+        const el = document.getElementById(item.btnId);
+        const target = document.getElementById(item.targetId);
+
+        if (el && target) {
+            el.addEventListener("click", () => {
+                target.scrollIntoView({ behavior: "smooth" });
+            });
+        }
+    });
+
+    // 2. EXPANDIR CARDS OCULTOS ("SAIBA MAIS")
+    const btnVer = document.getElementById("ver");
+    const cardsOcultos = document.querySelectorAll(".card-oculto");
+
+    if (btnVer) {
+        btnVer.addEventListener("click", () => {
+            cardsOcultos.forEach(card => {
+                card.classList.add("active");
+            });
+            btnVer.style.display = "none";
+        });
+    }
+
+    // 3. DOWNLOAD DO APK
+    const btnBaixar = document.getElementById("download");
+    if (btnBaixar) {
+        btnBaixar.addEventListener("click", () => {
+            const link = document.createElement("a");
+            link.href = "./apk/lillium.apk";
+            link.download = "Lillium.apk";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+    }
+
+    // 4. JOGAR NA WEB
+    const btnWeb = document.getElementById("net");
+    if (btnWeb) {
+        btnWeb.addEventListener("click", () => {
+            window.location.href = "jogarweb.html";
+        });
+    }
+
+    // 5. REDES SOCIAIS COM RASTREAMENTO NO BACKEND EXPRESS
+    const redes = [
+        { id: "email", url: `${BACKEND_URL}/api/redirect/email`, external: false },
+        { id: "insta", url: `${BACKEND_URL}/api/redirect/insta`, external: true },
+        { id: "ttk", url: `${BACKEND_URL}/api/redirect/ttk`, external: true },
+        { id: "ytb", url: `${BACKEND_URL}/api/redirect/ytb`, external: true }
+    ];
+
+    redes.forEach(rede => {
+        const el = document.getElementById(rede.id);
+        if (el) {
+            el.style.cursor = "pointer";
+            el.addEventListener("click", () => {
+                if (rede.external) {
+                    window.open(rede.url, "_blank");
+                } else {
+                    window.location.href = rede.url;
+                }
+            });
+        }
+    });
+});
