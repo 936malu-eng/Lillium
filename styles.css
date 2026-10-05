@@ -1,16 +1,16 @@
 @font-face {
   font-family: titulo;
-  src: url(./src/MonogramsToolbox.ttf);
+  src: url(./assets/MonogramsToolbox.ttf);
 }
 
 @font-face {
   font-family: subtitulo;
-  src: url(./src/Roman\ SD.ttf);
+  src: url(./assets/Roman\ SD.ttf);
 }
 
 @font-face {
   font-family: texto;
-  src: url(./src/TIMESS__.ttf);
+  src: url(./assets/TIMESS__.ttf);
 }
 
 * {
